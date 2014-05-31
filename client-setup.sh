@@ -11,11 +11,12 @@ echo "Load Commonly used functions from $startDir/functions.sh"
 . $startDir/base-setup.sh
 cd /cloudstone
 
+
 clientIPAddress=ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
 
-logHeader " Set-up Faban"
 
 ## Clone and build faban's forked repo
+logHeader " Set-up Faban"
 cd ~
 git clone https://github.com/nikolayg/faban.git 1> /dev/null
 cd ~/faban
@@ -58,14 +59,13 @@ do
     sudo sed -i "1s/^.*$/"\#\!$escapedAwkLocation" -f/" $FABAN_HOME/bin/Linux/$postStat
 done
 
-logHeader " Start and Test FABAN"
 ## Start FABAN with the same shell environment
+logHeader " Start and Test FABAN"
 $FABAN_HOME/master/bin/startup.sh
 
 ## Wait for Faban to start and make a request to it, so it extracts $FABAN_HOME/benchmarks/OlioDriver.jar
 sleep 1m
 cd /cloudstone
-
 wget http://$clientIPAddress:9980
 
 ## Wait for the request to complete and Backup Faban's dir
@@ -81,4 +81,3 @@ mv $OLIO_HOME/geocoder.tar.gz .
 
 ## Print installation details...
 logInstallDetails
-

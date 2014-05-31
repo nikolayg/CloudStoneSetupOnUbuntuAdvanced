@@ -15,18 +15,24 @@ cd /cloudstone
 . $startDir/base-server-setup.sh
 cd /cloudstone
 
-dbIPAddress=ec2-ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
+
+dbIPAddress=ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
 worker_processes=`grep -c ^processor /proc/cpuinfo `
 worker_connections=1500;
 
+nfsIPAddress=ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
+nfsPath=/filestorage
+
+
 ## Create and setup the /tmp/http_sessions, where sessions will be hosted.
 ## If it does not exists or if permissions are insufficient you won't be able to login
-logHeader "create  /tmp/http_sessions "
+logHeader " create  /tmp/http_sessions"
 mkdir -p /tmp/http_sessions
 sudo chmod -R 777 /tmp/http_sessions
 
 ## Setting up the web application
 logHeader "Setting the web app"
+
 exportVar APP_DIR "/var/www"
 sudo mkdir -p $APP_DIR
 
@@ -39,6 +45,7 @@ sudo patch -p1 < cloudstone.patch
 
 ## Set the DB configuration & Edit the config.php
 logHeader "Setup the DB connection"
+ 
 cd $APP_DIR/etc
 
 setProperty "\$olioconfig['dbTarget']" "'mysql:host=${dbIPAddress};dbname=olio';" ./config.php
@@ -66,7 +73,9 @@ sudo mv ./nginx.conf ./nginx-backup.conf
 sudo cp ~/nginx.conf ./nginx.conf
 
 setProperty "worker_processes" "$worker_processes;" ./nginx.conf " "
+
 setProperty "worker_connections" "$worker_connections;" ./nginx.conf " "
+
 sudo /usr/local/nginx/sbin/nginx
 
 ## Installing PHP
@@ -101,27 +110,15 @@ sudo cp /usr/local/etc/php-fpm.conf.default /usr/local/etc/php-fpm.conf
 sudo addgroup nobody # (or you can modify the php-fpm.com file to set the user and group to the ones you are already using)
 sudo /usr/local/sbin/php-fpm
 
-## Setting up the Filestore 
-logHeader "Set up the file store and its patch"
-cd $APP_DIR
-sudo cp /cloudstone/web-release/cloudsuite.patch .
-sudo patch -p1 < cloudsuite.patch
 
-## Find the best place to put the storage
-maxSpaceDir=`getMaxDiskSpaceDir`
-if [[ $maxSpaceDir == */ ]]
-then 
-    export FILESTORE=`getMaxDiskSpaceDir`filestorage
-else 
-    export FILESTORE=`getMaxDiskSpaceDir`/filestorage
-fi
-exportVar FILESTORE "$FILESTORE"
+## Mount NFS server
+logHeader "Mount NFS server"
 
-sudo mkdir -p $FILESTORE
-sudo chmod a+rwx $FILESTORE
-
-sudo chmod +x $FABAN_HOME/benchmarks/OlioDriver/bin/fileloader.sh
-$FABAN_HOME/benchmarks/OlioDriver/bin/fileloader.sh 102 $FILESTORE
+sudo mkdir -p $nfsPath
+sudo mount $nfsIPAddress:$nfsPath $nfsPath
+exportVar FILESTORE "$nfsPath"
+sudo chown -R $USER $FILESTORE
+sudo chmod -R 777 $FILESTORE 
 
 cd $APP_DIR/etc
 setProperty "\$olioconfig['localfsRoot']" "'$FILESTORE';" ./config.php
@@ -130,6 +127,15 @@ setProperty "\$olioconfig['localfsRoot']" "'$FILESTORE';" ./config.php
 sudo killall -9 php-fpm
 sudo /usr/local/sbin/php-fpm
 
+## Setup up the starup script, which will restart all servers upon reboot
+logHeader "Setup up the starup script, which will restart all servers upon reboot"
+cp ~/as-image-start.sh /cloudstone/
+sudo chmod 777 /cloudstone/as-image-start.sh
+
+shebang='#!/bin/sh -e'
+sudo bash -c "echo '$shebang' > /etc/rc.local"
+sudo bash -c "echo \"/cloudstone/as-image-start.sh &> /cloudstone/startup.log\" >> /etc/rc.local"
+sudo bash -c "echo \"exit 0\" >> /etc/rc.local"
+
 ## Print installation details...
 logInstallDetails
-

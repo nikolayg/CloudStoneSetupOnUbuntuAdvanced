@@ -15,20 +15,29 @@ cd /cloudstone
 . $startDir/base-server-setup.sh
 cd /cloudstone
 
-asIPAddress=ec2-ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
-conc_users=50
+asIPAddress=ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
+load_scale=100
 
-# Setup Tomcat and FABAN
-. ~/base-server-setup.sh
-cd /cloudstone
+##Setting up Tomcat
+logHeader "Setting up Tomcat"
+cp web-release/apache-tomcat-6.0.35.tar.gz .
+tar xzvf apache-tomcat-6.0.35.tar.gz 1> /dev/null
+exportVar CATALINA_HOME "/cloudstone/apache-tomcat-6.0.35"
 
+cd $CATALINA_HOME/bin
+tar zxvf commons-daemon-native.tar.gz 1> /dev/null
+cd commons-daemon-1.0.7-native-src/unix/
+./configure
+make
+cp jsvc ../..
+
+## Removed preconfigured MySql, set up mysql and its user
 logHeader " Setup MySql"
-## Removed preconfigured MySql
+cd /cloudstone
 sudo apt-get remove --purge -y mysql-server mysql-client mysql-common
 sudo apt-get autoremove
 sudo apt-get autoclean
 
-## Set up mysql and its user
 sudo groupadd mysql 
 sudo useradd -r -g mysql mysql
 
@@ -68,13 +77,15 @@ sudo bin/mysql -uroot < ~/setupDB.sql
 logHeader "Populate database"
 cd $FABAN_HOME/benchmarks/OlioDriver/bin
 sudo chmod +x dbloader.sh
-./dbloader.sh localhost $conc_users
+./dbloader.sh localhost $load_scale
+
 
 ## Setting up the Geocoder Emulator
 logHeader " Setting up the Geocoder Emulator"
 mkdir /cloudstone/geocoderhome
 sudo chmod -R 777 /cloudstone/geocoderhome 
 cd /cloudstone/geocoderhome
+
 exportVar GEOCODER_HOME "/cloudstone/geocoderhome"
 
 sudo cp ~/geocoder.tar.gz .

@@ -10,7 +10,6 @@ echo SYSTEM: `uname -a`
 echo CURRENT TIME: `date`
 echo START DIR: $startDir
 
-
 ## Make the CloudStone directory and give appropriate access for everyone
 logHeader " Setting up the installation directory /cloudstone"
 sudo mkdir /cloudstone
@@ -47,20 +46,11 @@ sudo apt-get install -y git 1> /dev/null
 ## Install monitoring tools
 sudo apt-get install -y sysstat 1> /dev/null
 
-
-logHeader "Change permissions and owner of /tmp, create /var/log/messages"
-sudo chown -R $USER /tmp/
-sudo chmod -R 777 /tmp/
-
-sudo touch /var/log/messages
-sudo chmod 777 /var/log/messages
-
 ## Change permission of pem file and set access without prompts
 logHeader " Setting SSH access without password"
 pemFile=CloudStone.pem
 sudo chmod 400 ~/$pemFile 
 sudo cp -rf ~/config ~/.ssh/config
-
 
 ## Set up Java
 logHeader " Setting up Java environment variables"
@@ -74,6 +64,14 @@ exportVar PATH "$PATH:$jrelocation/bin"
 ## Install ANT
 logHeader " Setting up ANT"
 sudo apt-get install -y ant
+
+## Set up /tmp, /var/log/messages
+logHeader " Change permissions and owner of /tmp, create /var/log/messages"
+sudo chown -R $USER /tmp/
+sudo chmod -R 777 /tmp/
+
+sudo touch /var/log/messages
+sudo chmod 777 /var/log/messages
 
 ## Download cloudstone, extract Olio and set its mysql connector
 logHeader " Download and setup Olio"
