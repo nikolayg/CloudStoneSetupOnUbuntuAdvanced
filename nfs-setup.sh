@@ -15,7 +15,7 @@ cd /cloudstone
 . $startDir/base-server-setup.sh
 cd /cloudstone
 
-load_scale=100
+load_scale=50
 
 ## Apply a patch to Olio
 logHeader "Patch Olio and populate the filestorage..."

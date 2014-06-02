@@ -16,7 +16,7 @@ cd /cloudstone
 cd /cloudstone
 
 asIPAddress=ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
-load_scale=100
+load_scale=50
 
 ##Setting up Tomcat
 logHeader "Setting up Tomcat"

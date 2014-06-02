@@ -48,7 +48,11 @@ function setProperty()
     file=$3
     # If the assignment symbol is not specified use "="
     assignSymbol=${4-=}
+    #echo $property
+    #echo $val
+    #echo sed -i -e "s/^\s*$property\s*$assignSymbol.*/$property$assignSymbol$val/" $file
     sudo sed -i -e "s/^\(\s*\)$property\s*$assignSymbol.*/\1$property$assignSymbol$val/" $file
+    #sudo sed -i "s/^\s*\($property *$assignSymbol *\).*/$property$assignSymbol$val/" $file
 }
 
 
@@ -95,14 +99,12 @@ function setServerFarmConfig()
     params=( "$@" )
     
     echo "" > "$tmpFile"
-    echo "upstream backend  {" >> "$tmpFile"
     for i in $(seq 0 2 $((numParams - 2)) )
     do 
         addess=${params[$i]}
         weigth=${params[$((i+1))]}
-        echo "   server $addess weight=$weigth;"  >> $tmpFile
+        echo "    server s$((i/2 + 1)) $addess:80 check cookie s$((i/2 + 1)) weight $weigth"  >> $tmpFile
     done
-    echo "}" >> $tmpFile
     
     file=${params[$((numParams-1))]}
     sudo bash -c "cat $tmpFile >> $file"
@@ -114,8 +116,8 @@ function setServerFarmConfig()
 function resetLoadBalancer()
 {
     params=( "$@" )
-    cd /etc/nginx/sites-available/
-    sudo cp -f ./default-backup ./default
-    setServerFarmConfig ${params[*]} "./default"
+    cd /etc/haproxy/
+    sudo cp -f ~/haproxy.cfg ./haproxy.cfg
+    setServerFarmConfig ${params[*]} "./haproxy.cfg"
     cd - 1> /dev/null
 }

@@ -17,17 +17,29 @@ cd /cloudstone
 
 asIPAddress=ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
 
-## Mount NFS server
-logHeader "Install latest NGINX from repository and configure it"
+logHeader "Install and setup the HAProxy load balancer"
 
-sudo apt-get install -y nginx 1> /dev/null
+# Install HAProxy
+sudo apt-get install haproxy
 
-cd /etc/nginx/sites-available/
-sudo cp ~/sites-available-default ./default-backup
+# Enable HAProxy
+setProperty ENABLED 1 /etc/default/haproxy
+
+# Backup HAProxy config
+sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg-default
+
+# Create HAProxy user
+sudo useradd -g haproxy haproxy
+
+# Backup HAProxy config
+sudo cp ~/haproxy.cfg /etc/haproxy/
+
+# Config the load balancer with the only web/app server we've got for now
 resetLoadBalancer $asIPAddress 1
 
-sudo service nginx restart
-#sudo service nginx reload
+# Start HAProxy
+sudo service haproxy start
+
 
 ## Print installation details...
 logInstallDetails

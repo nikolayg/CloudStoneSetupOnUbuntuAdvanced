@@ -13,13 +13,13 @@ nfsIPAddress=ec2-XX-XX-XX-XX.ap-southeast-2.compute.amazonaws.com
 pemFile=CloudStone.pem
 userName=ubuntu
 
-load_scale=100
+load_scale=50
 
 ## Change permissions of the pem file
 sudo chmod 400 $pemFile
 
 ## Lists of files and addresses
-allFiles=($pemFile functions.sh base-setup.sh base-server-setup.sh nfs-setup.sh as-setup.sh as-image-start.sh client-setup.sh lb-setup.sh db-setup.sh nginx.conf sites-available-default php-5.4.5-libxm2-2.9.0.patch php.ini setupDB.sql config)
+allFiles=($pemFile functions.sh base-setup.sh base-server-setup.sh nfs-setup.sh as-setup.sh as-image-start.sh client-setup.sh lb-setup.sh db-setup.sh nginx.conf sites-available-default php-5.4.5-libxm2-2.9.0.patch php.ini setupDB.sql config haproxy.cfg)
 allIPAddresses=($clientIPAddress $lbIPAddress $dbIPAddress $asIPAddress $nfsIPAddress)
 allScripts=(base-setup.sh base-server-setup.sh client-setup.sh as-setup.sh as-image-start.sh lb-setup.sh db-setup.sh nfs-setup.sh)
 
